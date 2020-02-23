@@ -7,6 +7,7 @@ const router = express.Router();
 const auth = require("../middleware/auth");
 
 const User = require("../model/User");
+const Group = require("../model/Group");
 
 const precision = a => {
     if (!isFinite(a)) return 0;
@@ -29,6 +30,7 @@ router.get(
     auth,
     [
         check("reqUser", "Please provide a valid username").isEmail(),
+        check("groupId", "Please provide a valid group id").isMongoId(),
     ],
     async (req, res) => {
         try {
@@ -40,8 +42,15 @@ router.get(
                 });
             }
 
+            const { reqUserMail, groupId } = req.body;
+
             const user = await User.findById(req.user.id);
-            res.json(user.location)
+            const reqUser = await User.findOne({ email: reqUserMail });
+            const group = await Group.findById(groupId);
+
+            if (group.find({ members: user.id }) && 
+                group.find({ members: reqUser.id }))
+                res.json(user.location);
         } catch (e) {
             res.send({ message: "Error in fetching location" });
             console.error(e);
@@ -54,13 +63,13 @@ router.post(
     auth,
     [
         check("lat").custom(value => {
-            if (!checkCoordinates(value)) 
+            if (!checkCoordinates(value))
                 return new Error("Please provide a valid latitude");
 
             return true;
         }),
         check("long").custom(value => {
-            if (!checkCoordinates(value)) 
+            if (!checkCoordinates(value))
                 return new Error("Please provide a valid longitude");
 
             return true;
@@ -84,7 +93,7 @@ router.post(
             await user.save();
 
             console.log(`lat: ${lat}, long: ${long}`);
-            
+
             res.json({ success: true });
         } catch (e) {
             res.send({ message: "Error in fetching user" });

@@ -19,6 +19,10 @@ const UserSchema = mongoose.Schema({
         type: Date,
         default: Date.now(),
     },
+    groups: [{
+        id: String,
+        owner: Boolean,
+    }],
     location: {
         lat: {
             type: Number,
