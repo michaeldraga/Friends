@@ -1,138 +1,367 @@
 package com.mike.loctest;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response.ErrorListener;
+import com.android.volley.Response.Listener;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
-
-    public static final String locationProvider = LocationManager.NETWORK_PROVIDER;
-    public static final int FIVE_SECONDS = 1000 * 5;
-
-    LocationManager locationManager;
-    LocationListener locationListener;
-
+    public static final int FIVE_SECONDS = 5000;
+    private static final int REQUEST_LOGIN = 1;
+    public static final String locationProvider = "network";
+    /* access modifiers changed from: private */
+    public Editor editor;
     Location lastKnownLocation;
+    LocationListener locationListener;
+    LocationManager locationManager;
+    private RequestQueue requestQueue = null;
+    /* access modifiers changed from: private */
+    public SharedPreferences sharedPreferences;
 
-    TextView tv;
+    /* renamed from: tv */
+    TextView f48tv;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    /* access modifiers changed from: protected */
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        Switch sw = (Switch) findViewById(R.id.switch1);
-        sw.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if (b) {
-                    // the toggle is enabled
-                    locStart();
-                } else {
-                    // the toggle is disabled
-                    locStop();
+        setContentView((int) C0485R.layout.activity_main);
+        if (savedInstanceState == null) {
+            startActivityForResult(new Intent(this, LoginActivity.class), 1);
+        }
+        if (1 != 0) {
+            ((Switch) findViewById(C0485R.C0487id.switch1)).setOnCheckedChangeListener(new OnCheckedChangeListener() {
+                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                    if (b) {
+                        MainActivity.this.locStart();
+                    } else {
+                        MainActivity.this.locStop();
+                    }
                 }
+            });
+            ((Button) findViewById(C0485R.C0487id.button)).setOnClickListener(new OnClickListener() {
+                public void onClick(View view) {
+                    MainActivity.this.login("{\n\t\"email\": \"test@gmail.com\",\n\t\"password\": \"123456\"\n}", "http://192.168.178.76:4000/user/login");
+                }
+            });
+            LocationManager locationManager2 = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            this.locationManager = locationManager2;
+            try {
+                this.lastKnownLocation = locationManager2.getLastKnownLocation(locationProvider);
+            } catch (SecurityException e) {
+                e.printStackTrace();
             }
-        });
-        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        try { lastKnownLocation = locationManager.getLastKnownLocation(locationProvider); }
-        catch (SecurityException e) { e.printStackTrace(); }
-        tv = findViewById(R.id.textView);
+            this.f48tv = (TextView) findViewById(C0485R.C0487id.textView);
+            String str = "android.permission.ACCESS_FINE_LOCATION";
+            if (ContextCompat.checkSelfPermission(this, str) != 0) {
+                ActivityCompat.requestPermissions(this, new String[]{str}, 3141);
+            }
+            SharedPreferences preferences = getPreferences(0);
+            this.sharedPreferences = preferences;
+            this.editor = preferences.edit();
+        }
+    }
+
+    /* access modifiers changed from: protected */
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1 && resultCode == -1) {
+            String str = "token";
+            if (this.sharedPreferences.contains(str)) {
+                this.editor.remove(str);
+            }
+            SharedPreferences sharedPreferences2 = this.sharedPreferences;
+            String str2 = NotificationCompat.CATEGORY_EMAIL;
+            if (sharedPreferences2.contains(str2)) {
+                this.editor.remove(str2);
+            }
+            this.editor.putString(str, data.getExtras().getString(str));
+            this.editor.putString(str2, data.getExtras().getString(str2));
+            this.editor.commit();
+            Toast.makeText(getApplicationContext(), "help me please", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(C0485R.C0489menu.menu_main, menu);
+        return true;
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == C0485R.C0487id.action_settings) {
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     public void locStart() {
-
-        locationListener = new LocationListener() {
-            @Override
+        LocationListener r5 = new LocationListener() {
             public void onLocationChanged(Location location) {
-                if (isBetterLocation(location, lastKnownLocation)){
-                    lastKnownLocation = location;
+                MainActivity mainActivity = MainActivity.this;
+                if (mainActivity.isBetterLocation(location, mainActivity.lastKnownLocation)) {
+                    MainActivity.this.lastKnownLocation = location;
                 }
-                sendLoc(lastKnownLocation);
+                MainActivity mainActivity2 = MainActivity.this;
+                mainActivity2.sendLoc(mainActivity2.lastKnownLocation);
             }
 
-            @Override
-            public void onStatusChanged(String s, int i, Bundle bundle) { }
+            public void onStatusChanged(String s, int i, Bundle bundle) {
+            }
 
-            @Override
-            public void onProviderEnabled(String s) {}
+            public void onProviderEnabled(String s) {
+            }
 
-            @Override
-            public void onProviderDisabled(String s) { }
+            public void onProviderDisabled(String s) {
+            }
         };
-
-        // register the listener with the location manager to receive location updates
+        this.locationListener = r5;
         try {
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, FIVE_SECONDS, 0, locationListener);
+            this.locationManager.requestLocationUpdates(locationProvider, 5000, 0.0f, r5);
         } catch (SecurityException e) {
             e.printStackTrace();
         }
     }
+
     public void locStop() {
-        locationManager.removeUpdates(locationListener);
-        tv.setText("GPS Data");
+        this.locationManager.removeUpdates(this.locationListener);
+        this.f48tv.setText("GPS Data");
     }
 
-    /** Determines whether one Location reading is better than the current Location fix
-     * @param location The new Location that you want to evaluate
-     * @param currentBestLocation The current Location fix, to which you want to compare the new one
-     * @return Whether the new Location is better than the old one
-     */
     public boolean isBetterLocation(Location location, Location currentBestLocation) {
         if (currentBestLocation == null) {
-            // a new location is always better than no location
             return true;
         }
-
-        // check whether the new location fix is newer or older
         long timeDelta = location.getTime() - currentBestLocation.getTime();
-        boolean isSignificantlyNewer = timeDelta > FIVE_SECONDS;
-        boolean isSignificantlyOlder = timeDelta < -FIVE_SECONDS;
+        boolean isSignificantlyNewer = timeDelta > 5000;
+        boolean isSignificantlyOlder = timeDelta < -5000;
         boolean isNewer = timeDelta > 0;
-
-        // if it's been more than two minutes since the current location, use the new location
-        // because the user has likely moved
         if (isSignificantlyNewer) {
             return true;
-        } else if (isSignificantlyOlder) {
-            // if the new location is more than five seconds older, it must be worse
+        }
+        if (isSignificantlyOlder) {
             return false;
         }
-
-        //check whether the new location fix is more or less accurate
         int accuracyDelta = (int) (location.getAccuracy() - currentBestLocation.getAccuracy());
         boolean isLessAccurate = accuracyDelta > 0;
         boolean isMoreAccurate = accuracyDelta < 0;
         boolean isSignificantlyLessAccurate = accuracyDelta > 10;
-
-        // check if the old and new location are form the same provider
         boolean isFromSameProvider = isSameProvider(location.getProvider(), currentBestLocation.getProvider());
-
-        // determine location quality using a combination of timeliness and accuracy
         if (isMoreAccurate) {
             return true;
-        } else if (isNewer && !isLessAccurate) {
-            return true;
-        } else if (isNewer && !isSignificantlyLessAccurate && isFromSameProvider){
+        }
+        if (isNewer && !isLessAccurate) {
             return true;
         }
-        return false;
+        if (!isNewer || isSignificantlyLessAccurate || !isFromSameProvider) {
+            return false;
+        }
+        return true;
     }
 
-    /** checks whether two providers are the same */
     private boolean isSameProvider(String provider1, String provider2) {
-        if (provider1 == null){
-            return provider2 == null;
+        if (provider1 != null) {
+            return provider1.equals(provider2);
         }
-        return provider1.equals(provider2);
+        return provider2 == null;
     }
 
     public void sendLoc(Location loc) {
-        tv.setText("Lat: " + loc.getLatitude() + "; Lon: " + loc.getLongitude());
+        TextView textView = this.f48tv;
+        StringBuilder sb = new StringBuilder();
+        sb.append("Lat: ");
+        sb.append(loc.getLatitude());
+        sb.append("; Lon: ");
+        sb.append(loc.getLongitude());
+        textView.setText(sb.toString());
+        StringBuilder sb2 = new StringBuilder();
+        sb2.append("{\n\t\"lat\": ");
+        sb2.append(loc.getLatitude());
+        sb2.append(",\n\t\"long\": ");
+        sb2.append(loc.getLongitude());
+        sb2.append("\n}");
+        String data = sb2.toString();
+        Toast.makeText(getApplicationContext(), data, 0).show();
+        String str = "http://192.168.178.76:4000/location/set";
+        sendPost(data, "http://192.168.178.76:4000/location/set");
+    }
+
+    public void login(String data, String url) {
+        final String savedata = data;
+        if (this.requestQueue == null) {
+            this.requestQueue = Volley.newRequestQueue(getApplicationContext());
+        }
+        StringRequest r0 = new StringRequest(1, url, new Listener<String>() {
+            public void onResponse(String response) {
+                String str = "token";
+                try {
+                    JSONObject objres = new JSONObject(response);
+                    Toast.makeText(MainActivity.this.getApplicationContext(), objres.toString(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this.getApplicationContext(), "goodyeet", Toast.LENGTH_SHORT).show();
+                    String token = new JSONObject(objres.toString()).getString(str);
+                    if (MainActivity.this.sharedPreferences.contains(str)) {
+                        Toast.makeText(MainActivity.this.getApplicationContext(), "fuck you", Toast.LENGTH_SHORT);
+                        MainActivity.this.editor.remove(str);
+                    }
+                    MainActivity.this.editor.putString(str, token);
+                    MainActivity.this.editor.commit();
+                } catch (JSONException e) {
+                    Toast.makeText(MainActivity.this.getApplicationContext(), "Server Error", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this.getApplicationContext(), "badyeet", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }, new ErrorListener() {
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this.getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        }) {
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+
+            public byte[] getBody() throws AuthFailureError {
+                byte[] bArr = null;
+                try {
+                    if (savedata != null) {
+                        bArr = savedata.getBytes("utf-8");
+                    }
+                    return bArr;
+                } catch (UnsupportedEncodingException e) {
+                    return null;
+                }
+            }
+        };
+        this.requestQueue.add(r0);
+    }
+
+    public void sendPost(String data, String url) {
+        final String savedata = data;
+        if (this.requestQueue == null) {
+            this.requestQueue = Volley.newRequestQueue(getApplicationContext());
+        }
+        StringRequest r0 = new StringRequest(1, url, new Listener<String>() {
+            public void onResponse(String response) {
+                try {
+                    Toast.makeText(MainActivity.this.getApplicationContext(), new JSONObject(response).toString(), Toast.LENGTH_SHORT).show();
+                } catch (JSONException e) {
+                    Toast.makeText(MainActivity.this.getApplicationContext(), e.toString(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        }, new ErrorListener() {
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this.getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        }) {
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+
+            public byte[] getBody() throws AuthFailureError {
+                byte[] bArr = null;
+                try {
+                    if (savedata != null) {
+                        bArr = savedata.getBytes("utf-8");
+                    }
+                    return bArr;
+                } catch (UnsupportedEncodingException e) {
+                    return null;
+                }
+            }
+
+            public Map<String, String> getHeaders() {
+                Map<String, String> params = new HashMap<>();
+                String str = "token";
+                params.put(str, MainActivity.this.sharedPreferences.getString(str, ""));
+                return params;
+            }
+        };
+        this.requestQueue.add(r0);
+    }
+
+    public void sendGet(String data, String url) {
+        final String savedata = data;
+        if (this.requestQueue == null) {
+            this.requestQueue = Volley.newRequestQueue(getApplicationContext());
+        }
+        StringRequest r0 = new StringRequest(0, url, new Listener<String>() {
+            public void onResponse(String response) {
+                try {
+                    Toast.makeText(MainActivity.this.getApplicationContext(), new JSONObject(response).toString(), Toast.LENGTH_SHORT).show();
+                } catch (JSONException e) {
+                    Toast.makeText(MainActivity.this.getApplicationContext(), e.toString(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        }, new ErrorListener() {
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this.getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        }) {
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+
+            public byte[] getBody() throws AuthFailureError {
+                byte[] bArr = null;
+                try {
+                    if (savedata != null) {
+                        bArr = savedata.getBytes("utf-8");
+                    }
+                    return bArr;
+                } catch (UnsupportedEncodingException e) {
+                    return null;
+                }
+            }
+
+            public Map<String, String> getHeaders() {
+                Map<String, String> params = new HashMap<>();
+                String str = "token";
+                params.put(str, MainActivity.this.sharedPreferences.getString(str, ""));
+                return params;
+            }
+        };
+        this.requestQueue.add(r0);
+    }
+
+    public void printToken(View view) {
+        Toast.makeText(getApplicationContext(), this.sharedPreferences.getString("token", "help"), Toast.LENGTH_SHORT).show();
+    }
+
+    public void getServerLocation(View view) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("{\n\t\"reqUserMail\": \"");
+        sb.append(this.sharedPreferences.getString(NotificationCompat.CATEGORY_EMAIL, ""));
+        sb.append("\",\n\t\"groupId\": \"5e528d6e39a3b01cd79ac053\"\n}");
+        sendPost(sb.toString(), "http://192.168.178.76:4000/location/get");
     }
 }

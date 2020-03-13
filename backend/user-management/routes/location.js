@@ -6,6 +6,8 @@ const jwt = require("jsonwebtoken");
 const router = express.Router();
 const auth = require("../middleware/auth");
 
+const scraper = require('../scraper');
+
 const User = require("../model/User");
 const Group = require("../model/Group");
 
@@ -25,11 +27,11 @@ function checkCoordinates(coordinate) {
     return precision(coordinate) <= 6 && digits(coordinate) == 2;
 }
 
-router.get(
+router.post(
     "/get/",
     auth,
     [
-        check("reqUser", "Please provide a valid username").isEmail(),
+        check("reqUserMail", "Please provide a valid username").isEmail(),
         check("groupId", "Please provide a valid group id").isMongoId(),
     ],
     async (req, res) => {
@@ -48,8 +50,8 @@ router.get(
             const reqUser = await User.findOne({ email: reqUserMail });
             const group = await Group.findById(groupId);
 
-            if (group.find({ members: user.id }) && 
-                group.find({ members: reqUser.id }))
+            if (Group.find({ members: user.id }) && 
+                Group.find({ members: reqUser.id }))
                 res.json(user.location);
         } catch (e) {
             res.send({ message: "Error in fetching location" });
@@ -90,6 +92,8 @@ router.post(
             const user = await User.findById(req.user.id);
             user.location.lat = lat;
             user.location.long = long;
+            const address = await scraper(lat, long);
+            user.location.address = address;
             await user.save();
 
             console.log(`lat: ${lat}, long: ${long}`);

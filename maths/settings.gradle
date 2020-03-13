@@ -1,0 +1,2 @@
+rootProject.name='maths'
+include ':app'
