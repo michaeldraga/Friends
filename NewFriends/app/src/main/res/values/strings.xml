@@ -4,4 +4,28 @@
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+
+    <string name="logo_description">Logo with text reading Friends</string>
+    <string name="bitmojis_description">Illustration showing 5 Bitmojis</string>
+    <string name="back_arrow_description">Arrow pointing backwards. Use to get back to the landing screen.</string>
+    <string name="pin_description">A pin for a map</string>
+    <string name="movement_description">The user\'s current movement status</string>
+    <string name="car_description">The user is currently moving by car</string>
+    <string name="walking_description">The user is currently waling</string>
+    <string name="house_description">The user is currently not moving</string>
+    <string name="favorite_description">This emote shows whether the user is a favorite or not</string>
+    <string name="is_favorite_description">The user is one of your favorites</string>
+    <string name="no_favorite_description">The user is not one of your favorites</string>
+
+    <string name="mail_hint">Your email address</string>
+    <string name="password_hint">Your password</string>
+    <string name="password_confirmation_hint">Confirm your password</string>
+    <string name="name_hint">Your username</string>
+
+    <string name="login_button_text">Log in</string>
+    <string name="register_button_text">Register</string>
+    <string name="logout_button_text">Log out</string>
+    <string name="add_friend_button_text">Add Friends</string>
+    <string name="requests_button_text">Requests</string>
 </resources>
+
