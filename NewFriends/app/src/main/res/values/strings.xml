@@ -27,5 +27,11 @@
     <string name="logout_button_text">Log out</string>
     <string name="add_friend_button_text">Add Friends</string>
     <string name="requests_button_text">Requests</string>
+
+    <string name="signup_link">No account yet? Click here to create one.</string>
+    <string name="login_link">Already have an account? Click here to log in.</string>
+
+    <string name="submit_button">Submit</string>
+    <string name="your_friend_input">Your friend\'s email</string>
 </resources>
 

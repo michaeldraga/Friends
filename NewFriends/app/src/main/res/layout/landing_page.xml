@@ -50,7 +50,7 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <Button
-            android:id="@+id/button4"
+            android:id="@+id/landing_login_button"
             android:layout_width="160dp"
             android:layout_height="60dp"
             android:layout_marginStart="10dp"
@@ -60,14 +60,15 @@
             android:layout_weight="1"
             android:background="@drawable/button_round_corners"
             android:text="@string/login_button_text"
+            android:textColor="@color/black"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/button5"
+            app:layout_constraintEnd_toStartOf="@+id/landing_register_button"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="1.0" />
 
         <Button
-            android:id="@+id/button5"
+            android:id="@+id/landing_register_button"
             android:layout_width="160dp"
             android:layout_height="60dp"
             android:layout_marginStart="10dp"
@@ -77,9 +78,10 @@
             android:layout_weight="1"
             android:background="@drawable/button_round_corners"
             android:text="@string/register_button_text"
+            android:textColor="@color/black"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/button4"
+            app:layout_constraintStart_toEndOf="@+id/landing_login_button"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.0" />
     </androidx.constraintlayout.widget.ConstraintLayout>

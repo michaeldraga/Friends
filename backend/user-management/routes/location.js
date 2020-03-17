@@ -50,9 +50,28 @@ router.post(
             const reqUser = await User.findOne({ email: reqUserMail });
             const group = await Group.findById(groupId);
 
+            const payload = {
+                user: {
+                    id: user.id
+                }
+            };
+
             if (Group.find({ members: user.id }) && 
                 Group.find({ members: reqUser.id }))
-                res.json(user.location);
+                jwt.sign(
+                    payload,
+                    "secret",
+                    {
+                        expiresIn: 3600
+                    },
+                    (err, token) => {
+                        if (err) throw err;
+                        res.status(200).json({
+                            location: user.location,
+                            success: true
+                        });
+                    }
+                );
         } catch (e) {
             res.send({ message: "Error in fetching location" });
             console.error(e);
@@ -98,7 +117,26 @@ router.post(
 
             console.log(`lat: ${lat}, long: ${long}`);
 
-            res.json({ success: true });
+            const payload = {
+                user: {
+                    id: user.id
+                }
+            };
+
+            jwt.sign(
+                payload,
+                "secret",
+                {
+                    expiresIn: 3600
+                },
+                (err, token) => {
+                    if (err) throw err;
+                    res.status(200).json({
+                        token,
+                        success: true
+                    });
+                }
+            );
         } catch (e) {
             res.send({ message: "Error in fetching user" });
             console.error(e);

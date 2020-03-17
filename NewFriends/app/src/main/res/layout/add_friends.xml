@@ -47,6 +47,7 @@
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/login_top"
         app:layout_constraintVertical_weight="1">
@@ -67,7 +68,7 @@
             android:id="@+id/pin"
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:layout_marginBottom="24dp"
+            android:layout_marginBottom="32dp"
             android:contentDescription="@string/pin_description"
             app:layout_constraintBottom_toTopOf="@+id/request_email"
             app:layout_constraintEnd_toEndOf="parent"
@@ -80,10 +81,10 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
             android:layout_marginEnd="10dp"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="48dp"
             android:autofillHints=""
             android:ems="10"
-            android:hint="@string/mail_hint"
+            android:hint="@string/your_friend_input"
             android:inputType="textEmailAddress"
             android:textColorHint="@color/jumbo"
             android:theme="@style/AppTheme"
@@ -91,49 +92,25 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <EditText
+        <Button
             android:id="@+id/register_password2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
             android:layout_marginEnd="10dp"
-            android:layout_marginBottom="56dp"
+            android:layout_marginBottom="64dp"
             android:autofillHints=""
-            android:ems="10"
-            android:hint="@string/password_hint"
-            android:inputType="textPassword"
-            android:textColorHint="@color/jumbo"
-            android:theme="@style/AppTheme"
-            app:layout_constraintBottom_toTopOf="@+id/register_register_button"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
-
-        <TextView
-            android:id="@+id/link_signup"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="center"
-            android:shadowColor="#FFFFFF"
-            android:text="@string/signup_link"
-            android:textColor="#859393"
-            android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/register_password2" />
-
-        <Button
-            android:id="@+id/register_register_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
             android:background="@drawable/button_round_corners"
-            android:paddingHorizontal="40dp"
-            android:text="@string/login_button_text"
-            android:textColor="@color/black"
-            android:textSize="18sp"
+            android:ems="10"
+            android:hint="@string/submit_button"
+            android:onClick="s"
+            android:textColorHint="@color/jumbo"
+            android:textSize="24sp"
+            android:theme="@style/AppTheme"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

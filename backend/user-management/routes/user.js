@@ -54,6 +54,11 @@ router.post(
                 username,
                 email,
                 password,
+                location: {
+                    lat: 400,
+                    long: 400,
+                    address: "undefined"
+                }
             });
 
             const salt = await bcrypt.genSalt(10);
@@ -162,7 +167,32 @@ router.get("/me", auth, async (req, res) => {
     try {
         // request.user is getting fetched from Middleware after token authentication
         const user = await User.findById(req.user.id);
-        res.json(user);
+
+        const payload = {
+            user: {
+                id: user.id
+            }
+        };
+
+        jwt.sign(
+            payload,
+            "secret",
+            {
+                expiresIn: 3600
+            },
+            (err, token) => {
+                if (err) throw err;
+                res.status(200).json({
+                    token,
+                    user: {
+                        id: user._id,
+                        username: user.username,
+                        email: user.email,
+                        location: user.location,
+                    }
+                });
+            }
+        );
     } catch (e) {
         res.send({ message: "Error in Fetching user" });
     }

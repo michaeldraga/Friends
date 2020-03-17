@@ -37,6 +37,28 @@ const UserSchema = mongoose.Schema({
             required: true,
         }
     },
+    friends: {
+        requests: {
+            outgoing: [{
+                id: {
+                    type: String,
+                },
+            }],
+            incoming: [{
+                id: {
+                    type: String,
+                }
+            }]
+        },
+        actual: [{
+            id: {
+                type: String,
+            },
+            fav: {
+                type: Boolean,
+            }
+        }]
+    }
 });
 
 // export model user with UserSchema

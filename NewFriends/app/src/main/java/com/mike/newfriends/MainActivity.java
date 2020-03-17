@@ -1,5 +1,7 @@
 package com.mike.newfriends;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -8,18 +10,25 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
@@ -35,6 +44,7 @@ import com.mike.loctest.R;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONArray;
 
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
@@ -53,17 +63,77 @@ public class MainActivity extends AppCompatActivity {
     /* access modifiers changed from: private */
     public SharedPreferences sharedPreferences;
     private static final String url = "http://82.193.225.50:4000";
+    private LayoutInflater inflater;
+
+    private Button _addFriendsButton;
+
+    private String result;
 
     /* renamed from: tv */
     TextView tv;
 
+    private static final boolean debug = false;
+
     /* access modifiers changed from: protected */
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.new_main);
         if (savedInstanceState == null) {
-            startActivityForResult(new Intent(this, LoginActivity.class), 1);
+            startActivityForResult(new Intent(this, LandingActivity.class), 1);
         }
+        sharedPreferences = getPreferences(0);
+        editor = sharedPreferences.edit();
+
+        LinearLayout insert = findViewById(R.id.insert_point);
+
+        inflater = this.getLayoutInflater();
+
+        _addFriendsButton = findViewById(R.id.button8);
+        this._addFriendsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent actIntent = new Intent(getApplicationContext(), AddFriendsActivity.class);
+                actIntent.putExtra("token", sharedPreferences.getString("token", ""));
+                startActivityForResult(actIntent, 1);
+                overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+                locStop();
+            }
+        });
+
+        Button button7 = findViewById(R.id.button7);
+        button7.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                fullRestart();
+            }
+        });
+        /*
+        View but = inflater.inflate(R.layout.user_location_template, insert, false);
+        TextView name = but.findViewById(R.id.name);
+        name.setText("help me please");
+        insert.addView(but);
+        */
+        String str = "android.permission.ACCESS_FINE_LOCATION";
+        if (ContextCompat.checkSelfPermission(this, str) != 0) {
+            ActivityCompat.requestPermissions(this, new String[]{str}, 3141);
+        }
+
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        try {
+            lastKnownLocation = locationManager.getLastKnownLocation(locationProvider);
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        }
+
+
+
+        //setContentView(R.layout.new_main);
+
+        //ConstraintLayout v = (ConstraintLayout) vi.inflate(R.layout.user_location_template, null);
+        //LinearLayout insert = (LinearLayout) findViewById(R.id.insert_point);
+        //insert.addView(v, 0, new ConstraintLayout.LayoutParams(ConstraintLayout.LayoutParams.MATCH_PARENT, ConstraintLayout.LayoutParams.MATCH_PARENT));
+
+        /*
         if (1 != 0) {
             ((Switch) findViewById(R.id.switch1)).setOnCheckedChangeListener(new OnCheckedChangeListener() {
                 public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
@@ -94,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
             SharedPreferences preferences = getPreferences(0);
             this.sharedPreferences = preferences;
             this.editor = preferences.edit();
-        }
+        }*/
     }
 
     /* access modifiers changed from: protected */
@@ -113,8 +183,12 @@ public class MainActivity extends AppCompatActivity {
             this.editor.putString(str, data.getExtras().getString(str));
             this.editor.putString(str2, data.getExtras().getString(str2));
             this.editor.commit();
-            Toast.makeText(getApplicationContext(), "help me please", Toast.LENGTH_SHORT).show();
+            if (debug)
+                Toast.makeText(getApplicationContext(), "help me please", Toast.LENGTH_SHORT).show();
         }
+        locStart();
+        listFriends();
+        sendGet("", url + "/user/me");
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -129,15 +203,93 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    public void listFriends() {
+        String _url = url + "/friends/list";
+        final String data = "";
+        final String savedata = data;
+        if (this.requestQueue == null) {
+            this.requestQueue = Volley.newRequestQueue(getApplicationContext());
+        }
+        StringRequest r0 = new StringRequest(1, _url, new Listener<String>() {
+            public void onResponse(String response) {
+                try {
+                    if (debug)
+                        Toast.makeText(MainActivity.this.getApplicationContext(), new JSONObject(response).toString(), Toast.LENGTH_SHORT).show();
+                    if (sharedPreferences.contains("token"))
+                        editor.remove("token");
+                    editor.putString("token", new JSONObject(response).getString("token"));
+                    editor.commit();
+                    try {
+                        JSONObject list = new JSONObject(response);
+                        JSONObject friends = list.getJSONObject("friends");
+                        JSONArray actual = friends.getJSONArray("actual");
+                        for (int i = 0; i < actual.length(); i++) {
+                            String username = actual.getJSONObject(i).getString("username");
+                            JSONObject location = actual.getJSONObject(i).getJSONObject("location");
+                            String lati = location.getString("lat");
+                            String longi = location.getString("long");
+                            String address = location.getString("address");
+                            ViewGroup insertPoint = (ViewGroup) findViewById(R.id.insert_point);
+                            View v = inflater.inflate(R.layout.user_location_template, insertPoint, false);
+                            TextView name = (TextView) v.findViewById(R.id.name);
+                            TextView street = (TextView) v.findViewById(R.id.street);
+                            ImageView movement = (ImageView) v.findViewById(R.id.movement);
+                            ImageView favorite = (ImageView) v.findViewById(R.id.favorite);
+                            name.setText(username);
+                            street.setText(address);
+                            //insertPoint.addView(v, 0, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                            insertPoint.addView(v);
+                        }
+                    } catch (Exception e) {
+                        if (debug)
+                            Toast.makeText(getApplicationContext(), "oopsie", Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    }
+                } catch (JSONException e) {
+                    if (debug)
+                        Toast.makeText(MainActivity.this.getApplicationContext(), e.toString(), Toast.LENGTH_SHORT).show();
+                    e.printStackTrace();
+                }
+            }
+        }, new ErrorListener() {
+            public void onErrorResponse(VolleyError error) {
+                if (debug) Toast.makeText(MainActivity.this.getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        }) {
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+
+            public byte[] getBody() throws AuthFailureError {
+                byte[] bArr = null;
+                try {
+                    if (savedata != null) {
+                        bArr = savedata.getBytes("utf-8");
+                    }
+                    return bArr;
+                } catch (UnsupportedEncodingException e) {
+                    return null;
+                }
+            }
+
+            public Map<String, String> getHeaders() {
+                Map<String, String> params = new HashMap<>();
+                String str = "token";
+                params.put(str, sharedPreferences.getString(str, ""));
+                return params;
+            }
+        };
+        this.requestQueue.add(r0);
+    }
+
     public void locStart() {
         LocationListener r5 = new LocationListener() {
             public void onLocationChanged(Location location) {
                 MainActivity mainActivity = MainActivity.this;
-                if (mainActivity.isBetterLocation(location, mainActivity.lastKnownLocation)) {
-                    MainActivity.this.lastKnownLocation = location;
+                if (mainActivity.isBetterLocation(location, lastKnownLocation)) {
+                    lastKnownLocation = location;
                 }
-                MainActivity mainActivity2 = MainActivity.this;
-                mainActivity2.sendLoc(mainActivity2.lastKnownLocation);
+                sendLoc(lastKnownLocation);
             }
 
             public void onStatusChanged(String s, int i, Bundle bundle) {
@@ -159,7 +311,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void locStop() {
         this.locationManager.removeUpdates(this.locationListener);
-        this.tv.setText("GPS Data");
     }
 
     public boolean isBetterLocation(Location location, Location currentBestLocation) {
@@ -201,13 +352,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void sendLoc(Location loc) {
-        TextView textView = this.tv;
-        StringBuilder sb = new StringBuilder();
-        sb.append("Lat: ");
-        sb.append(loc.getLatitude());
-        sb.append("; Lon: ");
-        sb.append(loc.getLongitude());
-        textView.setText(sb.toString());
         StringBuilder sb2 = new StringBuilder();
         sb2.append("{\n\t\"lat\": ");
         sb2.append(loc.getLatitude());
@@ -215,7 +359,7 @@ public class MainActivity extends AppCompatActivity {
         sb2.append(loc.getLongitude());
         sb2.append("\n}");
         String data = sb2.toString();
-        Toast.makeText(getApplicationContext(), data, Toast.LENGTH_SHORT).show();
+        if (debug)Toast.makeText(getApplicationContext(), data, Toast.LENGTH_SHORT).show();
         sendPost(data, url + "/location/set");
     }
 
@@ -229,23 +373,24 @@ public class MainActivity extends AppCompatActivity {
                 String str = "token";
                 try {
                     JSONObject objres = new JSONObject(response);
-                    Toast.makeText(MainActivity.this.getApplicationContext(), objres.toString(), Toast.LENGTH_SHORT).show();
-                    Toast.makeText(MainActivity.this.getApplicationContext(), "goodyeet", Toast.LENGTH_SHORT).show();
+                    if (debug)Toast.makeText(MainActivity.this.getApplicationContext(), objres.toString(), Toast.LENGTH_SHORT).show();
+                    if (debug)Toast.makeText(MainActivity.this.getApplicationContext(), "goodyeet", Toast.LENGTH_SHORT).show();
                     String token = new JSONObject(objres.toString()).getString(str);
                     if (MainActivity.this.sharedPreferences.contains(str)) {
-                        Toast.makeText(MainActivity.this.getApplicationContext(), "fuck you", Toast.LENGTH_SHORT);
+                        if (debug)Toast.makeText(MainActivity.this.getApplicationContext(), "fuck you", Toast.LENGTH_SHORT);
                         MainActivity.this.editor.remove(str);
                     }
                     MainActivity.this.editor.putString(str, token);
                     MainActivity.this.editor.commit();
                 } catch (JSONException e) {
-                    Toast.makeText(MainActivity.this.getApplicationContext(), "Server Error", Toast.LENGTH_SHORT).show();
-                    Toast.makeText(MainActivity.this.getApplicationContext(), "badyeet", Toast.LENGTH_SHORT).show();
+                    if (debug)Toast.makeText(MainActivity.this.getApplicationContext(), "Server Error", Toast.LENGTH_SHORT).show();
+                    if (debug)Toast.makeText(MainActivity.this.getApplicationContext(), "badyeet", Toast.LENGTH_SHORT).show();
+                    e.printStackTrace();
                 }
             }
         }, new ErrorListener() {
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(MainActivity.this.getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                if (debug)Toast.makeText(MainActivity.this.getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
             }
         }) {
             public String getBodyContentType() {
@@ -275,14 +420,21 @@ public class MainActivity extends AppCompatActivity {
         StringRequest r0 = new StringRequest(1, url, new Listener<String>() {
             public void onResponse(String response) {
                 try {
-                    Toast.makeText(MainActivity.this.getApplicationContext(), new JSONObject(response).toString(), Toast.LENGTH_SHORT).show();
+                    if (debug)Toast.makeText(MainActivity.this.getApplicationContext(), new JSONObject(response).toString(), Toast.LENGTH_SHORT).show();
+                    if (sharedPreferences.contains("token"))
+                        editor.remove("token");
+                    editor.putString("token", new JSONObject(response).getString("token"));
+                    editor.commit();
+                    result = response;
                 } catch (JSONException e) {
-                    Toast.makeText(MainActivity.this.getApplicationContext(), e.toString(), Toast.LENGTH_SHORT).show();
+                    if (debug)Toast.makeText(getApplicationContext(), e.toString(), Toast.LENGTH_SHORT).show();
+                    e.printStackTrace();
                 }
             }
         }, new ErrorListener() {
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(MainActivity.this.getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                if (debug)Toast.makeText(MainActivity.this.getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                error.printStackTrace();
             }
         }) {
             public String getBodyContentType() {
@@ -304,7 +456,7 @@ public class MainActivity extends AppCompatActivity {
             public Map<String, String> getHeaders() {
                 Map<String, String> params = new HashMap<>();
                 String str = "token";
-                params.put(str, MainActivity.this.sharedPreferences.getString(str, ""));
+                params.put(str, sharedPreferences.getString(str, ""));
                 return params;
             }
         };
@@ -319,14 +471,17 @@ public class MainActivity extends AppCompatActivity {
         StringRequest r0 = new StringRequest(0, url, new Listener<String>() {
             public void onResponse(String response) {
                 try {
-                    Toast.makeText(MainActivity.this.getApplicationContext(), new JSONObject(response).toString(), Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(MainActivity.this.getApplicationContext(), new JSONObject(response).toString(), Toast.LENGTH_SHORT).show();
+                    TextView tv = findViewById(R.id.textView2);
+                    tv.setText(new JSONObject(response).getJSONObject("user").getString("username"));
                 } catch (JSONException e) {
-                    Toast.makeText(MainActivity.this.getApplicationContext(), e.toString(), Toast.LENGTH_SHORT).show();
+                    if (debug)Toast.makeText(MainActivity.this.getApplicationContext(), e.toString(), Toast.LENGTH_SHORT).show();
+                    e.printStackTrace();
                 }
             }
         }, new ErrorListener() {
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(MainActivity.this.getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                if (debug)Toast.makeText(MainActivity.this.getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
             }
         }) {
             public String getBodyContentType() {
@@ -355,8 +510,17 @@ public class MainActivity extends AppCompatActivity {
         this.requestQueue.add(r0);
     }
 
+    public void fullRestart() {
+        Intent mStartActivity = new Intent(getApplicationContext(), MainActivity.class);
+        int mPendingIntentId = 123456;
+        PendingIntent mPendingIntent = PendingIntent.getActivity(getApplicationContext(), mPendingIntentId,    mStartActivity, PendingIntent.FLAG_CANCEL_CURRENT);
+        AlarmManager mgr = (AlarmManager)getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+        mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, mPendingIntent);
+        System.exit(0);
+    }
+
     public void printToken(View view) {
-        Toast.makeText(getApplicationContext(), this.sharedPreferences.getString("token", "help"), Toast.LENGTH_SHORT).show();
+        if (debug)Toast.makeText(getApplicationContext(), this.sharedPreferences.getString("token", "help"), Toast.LENGTH_SHORT).show();
     }
 
     public void getServerLocation(View view) {

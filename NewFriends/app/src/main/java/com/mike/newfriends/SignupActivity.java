@@ -15,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.RequestQueue;
@@ -46,15 +47,17 @@ public class SignupActivity extends AppCompatActivity {
 
     private static final String url = "http://82.193.225.50:4000";
 
+    private static final boolean debug = false;
+
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView((int) R.layout.activity_signup);
-        this._nameText = (EditText) findViewById(R.id.input_name);
-        this._emailText = (EditText) findViewById(R.id.input_email);
-        this._passwordText = (EditText) findViewById(R.id.input_password);
-        this._reEnterPasswordText = (EditText) findViewById(R.id.input_reEnterPassword);
-        this._signupButton = (Button) findViewById(R.id.btn_signup);
-        this._loginLink = (TextView) findViewById(R.id.link_login);
+        setContentView((int) R.layout.new_register);
+        this._nameText = (EditText) findViewById(R.id.register_name);
+        this._emailText = (EditText) findViewById(R.id.request_email);
+        this._passwordText = (EditText) findViewById(R.id.register_password1);
+        this._reEnterPasswordText = (EditText) findViewById(R.id.register_password2);
+        this._signupButton = (Button) findViewById(R.id.register_register_button);
+        this._loginLink = (TextView) findViewById(R.id.register_login_link);
         this._signupButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 SignupActivity.this.signup();
@@ -72,6 +75,12 @@ public class SignupActivity extends AppCompatActivity {
         this.editor = preferences.edit();
     }
 
+    public void onBackPressed() {
+        //moveTaskToBack(true);
+        super.onBackPressed();
+        overridePendingTransition(R.anim.push_right_in, R.anim.push_right_out);
+    }
+
     public void sendSignup(String data, final ProgressDialog pd) {
         final String savedata = data;
         if (this.requestQueue == null) {
@@ -83,22 +92,22 @@ public class SignupActivity extends AppCompatActivity {
                 try {
                     String token = new JSONObject(new JSONObject(response).toString()).getString(str);
                     if (SignupActivity.this.sharedPreferences.contains(str)) {
-                        Toast.makeText(SignupActivity.this.getApplicationContext(), "fuck you", Toast.LENGTH_SHORT);
+                        if (debug)Toast.makeText(SignupActivity.this.getApplicationContext(), "fuck you", Toast.LENGTH_SHORT);
                         SignupActivity.this.editor.remove(str);
                     }
                     SignupActivity.this.editor.putString(str, token);
                     SignupActivity.this.editor.commit();
-                    SignupActivity.this.onSignupSuccess();
+                    SignupActivity.this.onSignupSuccess(token);
                     pd.dismiss();
                 } catch (JSONException e) {
-                    Toast.makeText(SignupActivity.this.getApplicationContext(), "Server Error", Toast.LENGTH_SHORT).show();
-                    Toast.makeText(SignupActivity.this.getApplicationContext(), "badyeet", Toast.LENGTH_SHORT).show();
+                    if (debug)Toast.makeText(SignupActivity.this.getApplicationContext(), "Server Error", Toast.LENGTH_SHORT).show();
+                    if (debug)Toast.makeText(SignupActivity.this.getApplicationContext(), "badyeet", Toast.LENGTH_SHORT).show();
                     SignupActivity.this.onSignupFailed();
                 }
             }
         }, new ErrorListener() {
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(SignupActivity.this.getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                if (debug)Toast.makeText(SignupActivity.this.getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
             }
         }) {
             public String getBodyContentType() {
@@ -145,14 +154,27 @@ public class SignupActivity extends AppCompatActivity {
         sendSignup(sb.toString(), progressDialog);
     }
 
-    public void onSignupSuccess() {
+    public void onSignupSuccess(String token) {
         this._signupButton.setEnabled(true);
-        setResult(-1, null);
+        String str = "token";
+        if (this.sharedPreferences.contains(str)) {
+            this.editor.remove(str);
+        }
+        SharedPreferences sharedPreferences2 = this.sharedPreferences;
+        String str2 = NotificationCompat.CATEGORY_EMAIL;
+        if (sharedPreferences2.contains(str2)) {
+            this.editor.remove(str2);
+        }
+        this.editor.putString(str, token);
+        this.editor.commit();
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra(str, token);
+        setResult(-1, resultIntent);
         finish();
     }
 
     public void onSignupFailed() {
-        Toast.makeText(getBaseContext(), "Login failes", Toast.LENGTH_SHORT).show();
+        if (debug)Toast.makeText(getBaseContext(), "Login failes", Toast.LENGTH_SHORT).show();
         this._signupButton.setEnabled(true);
     }
 

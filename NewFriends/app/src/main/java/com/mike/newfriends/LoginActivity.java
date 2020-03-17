@@ -46,13 +46,15 @@ public class LoginActivity extends AppCompatActivity {
 
     private static final String url = "http://82.193.225.50:4000";
 
+    private static final boolean debug = false;
+
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView((int) R.layout.activity_login);
+        setContentView((int) R.layout.new_login);
         this.requestQueue = Volley.newRequestQueue(getApplicationContext());
-        this._emailText = (EditText) findViewById(R.id.input_email);
-        this._passwordText = (EditText) findViewById(R.id.input_password);
-        this._loginButton = (Button) findViewById(R.id.btn_login);
+        this._emailText = (EditText) findViewById(R.id.request_email);
+        this._passwordText = (EditText) findViewById(R.id.register_password2);
+        this._loginButton = (Button) findViewById(R.id.register_register_button);
         this._signupLink = (TextView) findViewById(R.id.link_signup);
         this._loginButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
@@ -101,11 +103,11 @@ public class LoginActivity extends AppCompatActivity {
                 String str = "token";
                 try {
                     JSONObject objres = new JSONObject(response);
-                    Toast.makeText(LoginActivity.this.getApplicationContext(), objres.toString(), Toast.LENGTH_SHORT).show();
-                    Toast.makeText(LoginActivity.this.getApplicationContext(), "goodyeet", Toast.LENGTH_SHORT).show();
+                    if (debug)Toast.makeText(LoginActivity.this.getApplicationContext(), objres.toString(), Toast.LENGTH_SHORT).show();
+                    if (debug)Toast.makeText(LoginActivity.this.getApplicationContext(), "goodyeet", Toast.LENGTH_SHORT).show();
                     String token = new JSONObject(objres.toString()).getString(str);
                     if (LoginActivity.this.sharedPreferences.contains(str)) {
-                        Toast.makeText(LoginActivity.this.getApplicationContext(), "fuck you", Toast.LENGTH_SHORT);
+                        if (debug)Toast.makeText(LoginActivity.this.getApplicationContext(), "fuck you", Toast.LENGTH_SHORT);
                         LoginActivity.this.editor.remove(str);
                     }
                     LoginActivity.this.editor.putString(NotificationCompat.CATEGORY_EMAIL, email);
@@ -114,13 +116,13 @@ public class LoginActivity extends AppCompatActivity {
                     LoginActivity.this.onLoginSuccess(token, email);
                     pd.dismiss();
                 } catch (JSONException e) {
-                    Toast.makeText(LoginActivity.this.getApplicationContext(), "Server Error", Toast.LENGTH_SHORT).show();
-                    Toast.makeText(LoginActivity.this.getApplicationContext(), "badyeet", Toast.LENGTH_SHORT).show();
+                    if (debug)Toast.makeText(LoginActivity.this.getApplicationContext(), "Server Error", Toast.LENGTH_SHORT).show();
+                    if (debug)Toast.makeText(LoginActivity.this.getApplicationContext(), "badyeet", Toast.LENGTH_SHORT).show();
                 }
             }
         }, new ErrorListener() {
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(LoginActivity.this.getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
+                if (debug)Toast.makeText(LoginActivity.this.getApplicationContext(), error.getMessage(), Toast.LENGTH_SHORT).show();
                 LoginActivity.this.onLoginFailed();
                 pd.dismiss();
             }
@@ -147,12 +149,15 @@ public class LoginActivity extends AppCompatActivity {
     /* access modifiers changed from: protected */
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 0 && resultCode == -1) {
+            setResult(-1, new Intent());
             finish();
         }
     }
 
     public void onBackPressed() {
-        moveTaskToBack(true);
+        //moveTaskToBack(true);
+        super.onBackPressed();
+        overridePendingTransition(R.anim.push_right_in, R.anim.push_right_out);
     }
 
     public void onLoginSuccess(String token, String email) {
