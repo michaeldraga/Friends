@@ -290,6 +290,7 @@ public class MainActivity extends AppCompatActivity {
                     lastKnownLocation = location;
                 }
                 sendLoc(lastKnownLocation);
+                listFriends();
             }
 
             public void onStatusChanged(String s, int i, Bundle bundle) {
